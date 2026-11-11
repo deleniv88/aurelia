@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AURELIA 50 — motor superyacht</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#f6f2ea;--mut:rgba(246,242,234,.86);--mut2:rgba(246,242,234,.62);--line:rgba(246,242,234,.3);--gold:#d8c3a0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#05080c}
+body{color:var(--ink);font-family:Manrope,system-ui,sans-serif;font-weight:400;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.serif{font-family:'Cormorant Garamond',Georgia,serif;font-weight:300}
+.over{font-size:10.5px;letter-spacing:.32em;text-transform:uppercase;font-weight:500;color:var(--mut)}
+
+#stage{position:fixed;inset:0;overflow:hidden;background:#05080c}
+.layer{position:absolute;left:0;top:0;width:1536px;height:864px;transform-origin:0 0;will-change:transform,opacity;opacity:0;pointer-events:none}
+.layer>video.base{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;background:#0a1220}
+.layer>img.base{position:absolute;inset:0;width:100%;height:100%;display:block;user-select:none;-webkit-user-drag:none}
+.bd{position:absolute;inset:-60px;background-size:cover;background-position:center;filter:blur(24px) brightness(.55) saturate(1.1);opacity:0;pointer-events:none}
+#wake{position:absolute;left:0;top:0;width:1536px;height:864px}
+#yacht{position:absolute;left:0;top:0;width:803px;height:464px;transform-origin:50% 50%;will-change:transform;filter:drop-shadow(0 22px 22px rgba(0,18,40,.38))}
+#shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(rgba(3,6,10,.62),rgba(3,6,10,0) 20%,rgba(3,6,10,0) 50%,rgba(3,6,10,.72))}
+#endShade{position:absolute;inset:0;background:rgba(3,6,10,.62);opacity:0;pointer-events:none}
+
+/* callouts */
+.co{position:absolute;width:0;height:0;opacity:0;transition:opacity .6s}
+.co .in{position:absolute;left:0;top:0;transform-origin:0 0;transform:scale(var(--inv,1));display:flex;align-items:center;white-space:nowrap}
+.co .dot{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 5px rgba(246,242,234,.18),0 0 24px rgba(0,0,0,.4)}
+.co .ln{position:absolute;top:0;height:1.5px;background:var(--ink);opacity:1;box-shadow:0 0 6px rgba(0,0,0,.5);transform-origin:0 0;transform:scaleX(0);transition:transform .9s cubic-bezier(.2,.7,.2,1)}
+.co .tx{position:absolute;top:-30px;padding:9px 14px 10px;border-radius:6px;background:rgba(5,8,12,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(246,242,234,.16);transition:opacity .6s .35s,transform .6s .35s;opacity:0;transform:translateY(6px);text-shadow:0 2px 18px rgba(0,0,0,.55)}
+.co .tx b{display:block;font-family:'Cormorant Garamond';font-weight:400;font-size:26px;line-height:1}
+.co .tx span{display:block;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:rgba(246,242,234,.85);font-weight:500;margin-top:6px}
+.co.r .ln{left:8px;width:90px}.co.r .tx{left:110px}
+.co.l .ln{right:8px;width:90px;transform-origin:100% 0}.co.l .tx{right:110px;text-align:right}
+.co.l .ln{left:auto;right:8px}
+.co.on{opacity:1}.co.on .ln{transform:scaleX(1)}.co.on .tx{opacity:1;transform:none}
+.dim{position:absolute;height:0;border-top:1px solid rgba(246,242,234,.75);opacity:0;transition:opacity .6s}
+.dim::before,.dim::after{content:'';position:absolute;top:-7px;width:1px;height:13px;background:rgba(246,242,234,.75)}
+.dim::before{left:0}.dim::after{right:0}
+.dim .t{padding:2px 12px;border-radius:4px;background:rgba(5,8,12,.55);position:absolute;left:50%;top:10px;transform:translateX(-50%) scale(var(--inv,1));transform-origin:50% 0;font-family:'Cormorant Garamond';font-size:22px;white-space:nowrap;text-shadow:0 2px 14px rgba(0,0,0,.5)}
+.dim.on{opacity:1}
+
+/* HUD */
+header{position:fixed;left:0;right:0;top:0;height:84px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 40px;z-index:20;pointer-events:none}
+header>*{pointer-events:auto}
+.logo{font-family:'Cormorant Garamond';font-weight:400;font-size:22px;letter-spacing:.42em}
+#chap{text-shadow:0 1px 8px rgba(0,0,0,.8);color:var(--ink)!important;display:flex;gap:14px;align-items:center;font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--mut)}
+#chap i{width:40px;height:1px;background:var(--line);position:relative;overflow:hidden}
+#chap i::after{content:'';position:absolute;inset:0;background:var(--ink);transform-origin:0 0;transform:scaleX(var(--p,0))}
+.hcta{background:rgba(5,8,12,.45)!important;justify-self:end;padding:12px 22px;border:1px solid var(--line);border-radius:99px;font-size:11px;letter-spacing:.24em;text-transform:uppercase;font-weight:500;transition:.35s;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);background:rgba(5,8,12,.18)}
+.hcta:hover{background:var(--ink);color:#0b0d10}
+.hcta .s{display:none}
+#rail{position:fixed;right:40px;top:50%;transform:translateY(-50%);z-index:20;display:flex;flex-direction:column;gap:14px}
+#rail button{text-shadow:0 1px 8px rgba(0,0,0,.9);display:flex;align-items:center;justify-content:flex-end;gap:12px;font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--mut2);transition:color .4s}
+#rail button span{opacity:0;transform:translateX(8px);transition:.4s}
+#rail:hover button span,#rail button.on span{opacity:1;transform:none}
+#rail button i{width:14px;height:1px;background:currentColor;transition:.4s}
+#rail button.on{color:var(--ink)}#rail button.on i{width:34px}
+#rail button:hover{color:var(--ink)}
+
+.ui{position:fixed;z-index:15;opacity:0;pointer-events:none;will-change:opacity,transform}
+.ui.live{pointer-events:auto}
+#uHero{left:0;right:0;top:50%;text-align:center;text-shadow:0 2px 30px rgba(0,0,0,.5)}
+#uHero::before{content:"";position:absolute;left:5%;right:5%;top:-50%;bottom:-50%;z-index:-1;pointer-events:none;background:radial-gradient(closest-side,rgba(3,6,10,.55),rgba(3,6,10,0))}
+#uHero h1{font-family:'Cormorant Garamond';font-weight:300;font-size:clamp(64px,13vw,210px);letter-spacing:.18em;line-height:.9;margin-left:.18em;text-shadow:0 10px 60px rgba(0,0,0,.25)}
+#uHero p{font-weight:600;margin-top:22px;font-size:11px;letter-spacing:.42em;text-transform:uppercase;color:var(--ink)}
+#hint{text-shadow:0 1px 8px rgba(0,0,0,.8);position:fixed;left:50%;bottom:30px;transform:translateX(-50%);z-index:15;display:flex;flex-direction:column;align-items:center;gap:12px;font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:var(--mut)}
+#hint i{width:1px;height:46px;background:linear-gradient(var(--ink),transparent);animation:drip 2s infinite}
+@keyframes drip{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+.cap{left:40px;bottom:46px;width:460px;text-shadow:0 1px 2px rgba(0,0,0,.35),0 2px 24px rgba(0,0,0,.45)}
+.cap::before{content:"";position:absolute;left:-260px;right:-260px;top:-200px;bottom:-140px;z-index:-1;pointer-events:none;background:radial-gradient(closest-side,rgba(3,6,10,.72),rgba(3,6,10,.45) 55%,rgba(3,6,10,0))}
+.cap.top{top:120px;bottom:auto}
+.cap .n{display:flex;align-items:center;gap:16px}
+.cap .n i{width:48px;height:1px;background:var(--line)}
+.cap h2{text-wrap:balance;font-family:'Cormorant Garamond';font-weight:300;font-size:64px;line-height:.95;margin:16px 0 14px;letter-spacing:-.005em}
+.cap h2 em{font-style:italic}
+.cap p{text-wrap:pretty;color:rgba(246,242,234,.92)!important;font-size:14px;line-height:1.7;color:var(--mut);max-width:380px}
+.spec{display:flex;gap:28px;margin-top:20px}
+.spec div b{display:block;font-family:'Cormorant Garamond';font-weight:400;font-size:30px;line-height:1}
+.spec div span{color:rgba(246,242,234,.82)!important;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mut)}
+
+#uEnd{left:50%;top:50%;width:min(720px,92vw);text-align:center}
+#uEnd h2{text-wrap:balance;font-family:'Cormorant Garamond';font-weight:300;font-size:clamp(46px,6vw,84px);line-height:1;margin:14px 0 26px}
+#uEnd h2 em{font-style:italic}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:28px}
+.grid div{padding:18px 6px}
+.grid div+div{border-left:1px solid var(--line)}
+.grid b{display:block;font-family:'Cormorant Garamond';font-weight:400;font-size:32px;line-height:1}
+.grid span{font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--mut)}
+.btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn{padding:17px 30px;border-radius:99px;font-size:11px;letter-spacing:.24em;text-transform:uppercase;font-weight:600;transition:.35s}
+.btn.solid{background:var(--ink);color:#0b0d10}.btn.solid:hover{background:var(--gold)}
+.btn.ghost{border:1px solid var(--line)}.btn.ghost:hover{background:rgba(246,242,234,.1)}
+#uEnd small{display:block;margin-top:18px;font-size:12px;color:var(--mut)}
+
+#modal{position:fixed;inset:0;z-index:50;display:none;place-items:center;background:rgba(3,5,8,.6);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+#modal.on{display:grid}
+#modal .box{width:min(440px,92vw);padding:36px 32px;position:relative;background:rgba(14,16,20,.9);border:1px solid var(--line);border-radius:6px}
+#modal h3{font-family:'Cormorant Garamond';font-weight:300;font-size:40px;line-height:1.05;margin:12px 0 10px}
+#modal p{color:var(--mut);font-size:13px;line-height:1.6;margin-bottom:22px}
+#modal input,#modal select{width:100%;padding:14px 0;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;font-size:14px;margin-bottom:12px;outline:none;border-radius:0}
+#modal select option{background:#111;color:var(--ink)}
+#modal input:focus{border-color:var(--ink)}
+#modal .btn{width:100%;margin-top:14px}
+#modal .x{position:absolute;right:20px;top:16px;font-size:24px;color:var(--mut)}
+
+#mtip.on{opacity:1}
+#mtip b{display:block;color:var(--ink);font-family:'Cormorant Garamond';font-size:20px;font-weight:400;margin-bottom:2px}
+#mtip{position:fixed;left:14px;right:14px;top:70px;z-index:30;padding:14px 16px;font-size:13px;line-height:1.5;color:var(--mut);background:rgba(10,12,16,.82);border:1px solid var(--line);border-radius:10px;opacity:0;pointer-events:none;transition:.3s}
+
+#loader{position:fixed;inset:0;z-index:99;background:#05080c;display:grid;place-items:center;transition:opacity 1s}
+#loader .w{text-align:center}
+#loader .logo{font-size:30px}
+#loader .pb{width:160px;height:1px;background:var(--line);margin:22px auto 0;position:relative;overflow:hidden}
+#loader .pb i{position:absolute;inset:0;background:var(--ink);transform-origin:0 0;transform:scaleX(0);transition:transform .4s}
+
+@media (max-width:900px){
+ header{height:62px;padding:0 16px;grid-template-columns:1fr auto}
+ #chap{display:none}
+ .logo{font-size:17px;letter-spacing:.34em}
+ .hcta{padding:10px 14px;font-size:10px;letter-spacing:.18em}.hcta .l{display:none}.hcta .s{display:inline}
+ #rail{display:none}
+ #uHero h1{letter-spacing:.12em;margin-left:.12em}
+ #uHero p{font-size:9.5px;letter-spacing:.3em}
+ .cap{left:20px;right:20px;bottom:26px;width:auto}
+ .cap h2{font-size:42px;margin:10px 0 8px}
+ .cap p{font-size:13px;line-height:1.55}
+ .spec{gap:18px;margin-top:12px}.spec div b{font-size:24px}
+ .co .tx b{font-size:20px}.co .tx span{font-size:8.5px;letter-spacing:.2em}
+ .co.r .ln,.co.l .ln{width:46px}.co.r .tx{left:62px}.co.l .tx{right:62px}
+ #uEnd h2{margin:10px 0 18px}
+ .grid{grid-template-columns:repeat(2,1fr)}.grid div:nth-child(3){border-left:0}.grid div:nth-child(n+3){border-top:1px solid var(--line)}
+ .grid b{font-size:26px}
+ .btn{padding:15px 22px;width:100%}
+}
+@media (max-width:900px){
+ .co .ln,.co .tx{display:none}
+ .co{pointer-events:auto}
+ .co .dot{width:26px;height:26px;left:-13px;top:-13px;background:rgba(246,242,234,.92);box-shadow:0 0 0 6px rgba(246,242,234,.25)}
+ .co .dot::after{content:'+';position:absolute;inset:0;display:grid;place-items:center;color:#0b0d10;font-style:normal;font-size:17px;line-height:26px;text-align:center}
+ .cap.top{top:auto;bottom:26px}
+}
+@media (max-width:900px) and (orientation:portrait){
+ .layer.soft>video.base,.layer.soft>img.base{-webkit-mask-image:linear-gradient(transparent,#000 6%,#000 94%,transparent);mask-image:linear-gradient(transparent,#000 6%,#000 94%,transparent)}
+}
+</style>
+</head>
+<body>
+<div id="loader"><div class="w"><div class="logo">AURELIA</div><div class="pb"><i id="lp"></i></div></div></div>
+
+<div id="stage">
+ <div id="bds"><div class="bd" id="B_hero" style="background-image:url(data:image/webp;base64,UklGRuwAAABXRUJQVlA4IOAAAACwBQCdASogABIAPp1CmUmlo6IhKA1QsBOJbACdMoAGzr9AtY/LpQNZdHRt9BTQFmUR5YpEFmAA/vrhv0IJHRHajLzjnNxk8H6QSV88ZtvEDuxkjf/X9uvMvQtr3GUfUxYP8mTEITbt+aWpd00h2AIC2SN3bELAGgkABNHR2xz1Y8GtkBQYmOg4/ZwqJNR0B6Z1sciQZa5llXBrM1EbJFdro7rtkyctpiRVLsItNf5r8kmt72QbDJSqo0V62BMzCq7hEVP7Xhd06pObk/+vak9wzgTM/gzorvRZS/4M6K3oAA==)"></div><div class="bd" id="B_profile" style="background-image:url(data:image/webp;base64,UklGRs4AAABXRUJQVlA4IMIAAADwBQCdASogABIAPp1EmUklpCIhMBgIALATiUAXZnI/nLAAFxQ4QloRBHNRt9Xt+yTIdEKMXmah8AD+85rJPNtTGsppUcYh4Jl35+kKeiBHuDw37IY3Ub+LJcgyK7UQTxHBX8tLZF3wm+5B6rxqA1zUuOg7ZOBiKpkAACnrbZPIIQ4T7lAMA6Zu8rmHe8ZSDh4JyJqvrrvtmqTgOaFNNrV8F+z4AjtLxD7ey3mw7SiPeyNDCjS2ioPumNzHjQm9cAAAAA==)"></div><div class="bd" id="B_bow" style="background-image:url(data:image/webp;base64,UklGRggBAABXRUJQVlA4IPwAAABwBgCdASogABIAPp0+mkgloyKhMAgAsBOJQBOmUJEU8Ed/FSyLUTZ8klhf8sEjcS8IyMZrAu62YeMEvAAA/pBx+BQAakekkodGNVn26pjSiQeOhEElZ/daNmAZP+oLKCHwCNuP8rXnwq3kdbkjVdR9mvergISbAQxlJwbe+agv/eHXc4Bz7Az+6iK8NkFCFyNNf+0idZjEuHNGnsJV+LWTj9mT0n9PRvsaM0dwKDDu9VlWhxjXclx5JTrj0X4impaNFKeBYdW4LQNXxCrVwLJccYKRlFGtxmRrHi7lj9WD8+W5qtzpSwEwt/i5/zkTp+itCDKAkFoQeFBZAAA=)"></div><div class="bd" id="B_top" style="background-image:url(data:image/webp;base64,UklGRgYBAABXRUJQVlA4IPoAAAAwBgCdASogABIAPp1AmkglpCKhMAgAsBOJaACdMtJB/otCy2EPW+7fkveKEgo950SzrpRllXZjl/6AAP545Y+oAUmsxy9p3SW3EXtOfrAKknSEifYWfIfsLJR55lkX7zm+FMZT/1g+NKtPf30Z/3ksIqdUQv0GMvyRox2Ky3bntaziyepR+BL21l0NqlqRCnZicWzt11MoyE5/OkU/jGU+dFf55Ka/t5f5+7a8Q7wWPy4YztglqQfoD+SEuWNCmc50g2hNs7j6RlMg4pON3+5Cy6eZHzy0PZyiHr6Gp9EmuFS8IoYZTDWMoXk+AAWgm0vIbdV+o/p+KYAA)"></div><div class="bd" id="B_jacuzzi" style="background-image:url(data:image/webp;base64,UklGRgwBAABXRUJQVlA4IAABAADwBgCdASogABIAPp0+mUgloyKhMAgAsBOJaACsOUE6/h+KYfaAVCIrldKalBFe5uYSS/Us9rbSuFKQ4+uwtyBQAP7sEM8PGJUG5gQQdj8wxMBuiMJVGZKFM9zZ5DIELfmiXBSvAgQdSBZUi/c+HLMbA2GMCjkN+BPpMeqKXZv5/dAqgSIpGmQ/5ApeMmzECif6acQ9zECl3nA8BZqFmF6xQnVQWnZBbgkZ8RLX4I65PMxPdFxZFWMeMYzsr4KWHp1Fw8b8xB44WClzyqpHk4pOUVDwEGX7dtTTV58/3YsLdJF9tdH8K9sn6Al6zLxpEE4ImajLuk97Fau6j5Ny4gAA)"></div><div class="bd" id="B_stern" style="background-image:url(data:image/webp;base64,UklGRiwBAABXRUJQVlA4ICABAACwBQCdASogABIAPp1Amkglo6KhMAgAsBOJZACdMoCpAVuaxZhkJzTLckeJQdDKgarC8Bj05ugA/adMi3sTYFVHExquxI/0vUXLQONxDy0sv8Vs2OleC5Yy8SCgt23p5XXws4X78Gr0XEG2wmws09cKSD6jE0FLreEQx9cZRlxLJ58WDn1rmbIp8HncuDttpG3Xa+jI5kRJxeZmvt4NSa5Tt8KGxtAEmYby+klRdaJNnDSajsPblKEs9zc/vm90PtBvaxOL4sbDkXKNMKxBoyT6iH2ENBr4OXieAINIlJ5aV7USpa3rLZGA9RjKgbRfaQvxDoTyiSdL7JRm48O72kmH+KcBToKeBd7BKPWcRj+2wkFF7QuzIbMdRj8EGkBoAAA=)"></div><div class="bd" id="B_salon" style="background-image:url(data:image/webp;base64,UklGRggBAABXRUJQVlA4IPwAAABwBQCdASogABIAPp0+mUgloyKhMAgAsBOJYwCsM47lwxlhVs1pL+C2Z+XIo6Vs6Hlgt8sAAP3vHxndDefc5GzJ92BkLu5efm5vXBCIPeobypv9ZbGicgZva8pEj4tQsUILJ7trmiaX5vhCYeaOnXxqRcaoqFkaSYrTvb5G3dBN7thqL0auAQK/CYeOVst9C2TNcNEe9Ub7YIouwjFIO8o3RZvaKTIIFNR5SBibGj4hIsOvj6g9fhL3vbLAExUY77KnURl2o2WKoy3aqok0ifeLBCA4q8WAMY3Vjx1ohTnnRg30cYYuMsK/565+9iQh2XPt6Jw1oO+BSgFgAAA=)"></div><div class="bd" id="B_suite" style="background-image:url(data:image/webp;base64,UklGRvYAAABXRUJQVlA4IOoAAADQBgCdASogABIAPp1AmUglpCKhMAgAsBOJYwCdOUFUFZ50gN0DGaHL3DG/g0T1tJK6xGQq130RBujP0mVVqlgA/k1tTog7vAtVt3oxp19gr4YkKGRKhtXBiKZX0RFf0jUEq7IIiE3MTM8+oZ5m3SYQy9NYLt5qG00XGGMt+lcnXFy/kCTdt81MT/ErueuQ1CWtJka7cbuevP6PBCxl/85e5xUxXH0qkRDtTj/EgoAEpQcWOVb+i4T6FSHgJyFySyCTG29Ujv1ZKyOKC/RObk6i3v7rr2Qwbf0rW546Kqyf2ZdRYVwqC/Z55AA=)"></div><div class="bd" id="B_night" style="background-image:url(data:image/webp;base64,UklGRrAAAABXRUJQVlA4IKQAAAAQBQCdASogABIAPp1Am0mlo6IhMBgIALATiUAWHYaN8YLp1ESfBudyqXUymstKf9gAAP74aKQixGnxjgjG26e8brkC8In+jI+xf2x34PLg7gDzbyNfX8g/6L/2ZD8MuZQTB7C5MH3W8dutdkGjtPZDgKFB/ddemNZhZgselyHWPV4XxSZvpDGCZuDKWiQZPGOxxOHDCqMwL0bTuRa/3Le9KpAAAA==)"></div></div>
+ <div class="layer soft" id="L_hero"><video class="base" id="V_hero" poster="img/hero-poster.webp" muted playsinline loop preload="auto"></video></div>
+ <div class="layer soft" id="L_profile"><video class="base" id="V_profile" poster="img/profile-poster.webp" muted playsinline loop preload="auto"></video></div>
+ <div class="layer soft" id="L_bow"><video class="base" id="V_bow" poster="img/bow-poster.webp" muted playsinline preload="auto"></video></div>
+ <div class="layer soft" id="L_top"><img class="base" src="img/top.webp" loading="lazy" decoding="async" alt="Aerial view"></div>
+ <div class="layer soft" id="L_jacuzzi"><img class="base" src="img/jacuzzi.webp" loading="lazy" decoding="async" alt="Sundeck with jacuzzi"></div>
+ <div class="layer soft" id="L_stern"><img class="base" src="img/stern.webp" loading="lazy" decoding="async" alt="Beach club"></div>
+ <div class="layer soft" id="L_salon"><img class="base" src="img/salon.webp" loading="lazy" decoding="async" alt="Main salon"></div>
+ <div class="layer soft" id="L_suite"><img class="base" src="img/suite.webp" loading="lazy" decoding="async" alt="Owner’s suite"></div>
+ <div class="layer soft" id="L_night"><video class="base" id="V_night" poster="img/night-poster.webp" muted playsinline loop preload="auto"></video></div>
+ <div id="endShade"></div>
+ <div id="shade"></div>
+</div>
+
+<header><div class="logo">AURELIA</div><div id="chap"><span id="chapN">01</span><i id="chapBar"></i><span id="chapT">The bay</span></div><button class="hcta" id="hdrCta"><span class="l">Private viewing</span><span class="s">Viewing</span></button></header>
+<nav id="rail"></nav>
+<div id="mtip"></div>
+
+<section class="ui" id="uHero"><div class="over">Motor superyacht · 2027</div><h1>AURELIA</h1><p>50 metres of silence</p></section>
+<div id="hint">Scroll<i></i></div>
+<section class="ui cap top" id="c_profile"></section>
+<section class="ui cap" id="c_bow"></section>
+<section class="ui cap" id="c_top"></section>
+<section class="ui cap" id="c_jacuzzi"></section>
+<section class="ui cap" id="c_stern"></section>
+<section class="ui cap" id="c_salon"></section>
+<section class="ui cap" id="c_suite"></section>
+<section class="ui" id="uEnd">
+ <div class="over">AURELIA 50 · Italian shipyard · 2027</div>
+ <h2>The sea, <em>on your terms</em></h2>
+ <div class="grid"><div><b>50 m</b><span>Length</span></div><div><b>12</b><span>Guests · 6 cabins</span></div><div><b>17 kn</b><span>Top speed</span></div><div><b>4,000</b><span>nm range</span></div></div>
+ <div class="btns"><button class="btn solid" id="endCta">Request a private viewing</button><button class="btn ghost" id="charterBtn">Charter · from €320,000 / week</button></div>
+ <small>Sale price on request. Viewings in Monaco, Porto Cervo or Dubrovnik.</small>
+</section>
+
+<div id="modal"><div class="box">
+ <button class="x" id="mClose">×</button>
+ <div class="over" id="mOver">AURELIA 50</div>
+ <h3 id="mTitle">Private viewing</h3>
+ <p id="mText">Our broker will contact you within the hour to arrange a date and marina.</p>
+ <form id="mForm"><input placeholder="Name" required><input placeholder="Email or phone" required><select><option>Purchase</option><option>Charter</option></select><button class="btn solid" type="submit">Send request</button></form>
+</div></div>
+
+<div id="track"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const smooth=t=>t*t*(3-2*t);
+
+/* ============ content ============ */
+const SCENES=[
+ {id:'profile',n:'01',t:'Silhouette',h:'A line <em>you recognise</em>',p:'A vertical bow, glass across three decks and a low graphite hardtop. Aluminium hull, styled by a Milan design studio.',spec:[['50 m','length'],['9.4 m','beam'],['3','decks']],
+  co:[[180,478,'Vertical bow','soft ride in a swell','r'],[880,466,'Three decks of glass','a view from every cabin','r'],[930,250,'Satellite link','Starlink · 4G · VSAT','r'],[1385,545,'Beach club','at sea level','r']],dim:[165,600,1250,'50 metres']},
+ {id:'bow',n:'02',t:'Under way',h:'<em>Silence</em> at 17 knots',p:'Hybrid propulsion and zero-speed stabilisers keep her quiet under way and perfectly still at anchor.',spec:[['17','kn max'],['13','kn cruise'],['4,000','nm range']],
+  co:[[1015,650,'Fast displacement hull','20% less fuel','r'],[480,470,'Hybrid mode','8 hours on batteries','l']]},
+ {id:'top',n:'03',t:'Decks',h:'Space <em>from stern to bow</em>',p:'Four open-air lounges: an alfresco dining deck, a sundeck with jacuzzi, a foredeck lounge and a beach club at the waterline.',spec:[['420 m²','of deck'],['12','guests'],['11','crew']],
+  co:[[90,415,'Swim platform','fold-down, 12 m²','l'],[272,420,'Dining deck','table for 12','r'],[1006,410,'Jacuzzi','heated to 38°C','r'],[1245,420,'Foredeck lounge','shaded by an awning','l']]},
+ {id:'jacuzzi',n:'04',t:'Sundeck',h:'Sunset, <em>from the water</em>',p:'A jacuzzi on the top deck, sun loungers and an open-air bar. Glass bulwarks keep the view uninterrupted.',spec:[['38°C','water'],['6','sun loungers']],
+  co:[[420,700,'Six-seat jacuzzi','lighting and hydromassage','r'],[1440,700,'Sun terrace','open-air bar','l']]},
+ {id:'stern',n:'05',t:'Beach club',h:'A terrace <em>at sea level</em>',p:'The stern opens into a beach club with fold-out side terraces, a sauna and a garage for water toys.',spec:[['60 m²','beach club'],['2','jet skis']],
+  co:[[1010,540,'Side terraces','fold out over the water','r'],[180,690,'Water toys','Seabob · SUP · jet ski','r'],[700,430,'Lounge and sauna','straight into the sea','l']]},
+ {id:'salon',n:'06',t:'Salon',h:'An interior of <em>light and oak</em>',p:'Floor-to-ceiling glass on both sides, pale oak, travertine and bouclé. Dining for 12 opens onto the aft deck.',spec:[['92 m²','salon'],['2.4 m','headroom']],
+  co:[[1480,500,'Full-height glazing','views to both sides','l'],[760,610,'Dining for 12','opens onto the aft deck','r']]},
+ {id:'suite',n:'07',t:'Owner’s suite',h:'Mornings <em>in 180°</em>',p:'A full-beam owner’s suite in the bow, with curved glass, a marble bathroom and a private dressing room.',spec:[['62 m²','suite'],['180°','panorama']],
+  co:[[950,520,'Curved glazing','a 180° view over the bow','r'],[420,790,'King-size bed','facing the sunrise','r']]},
+];
+/* ============ timeline ============ */
+const FULL=[0,0,1536,864];
+const YC=[820,330];
+const yRect=w=>{const h=w*864/1536;return[YC[0]-w/2,YC[1]-h/2,w,h]};
+const LAYERS={
+ hero:{cam:[[0,FULL],[.3,FULL],[1.45,()=>yRect(1250)],[1.85,()=>yRect(950)]],op:[[0,1],[1.5,1],[1.85,0]],blur:[1.5,1.85]},
+ profile:{cam:[[1.5,[150,90,1240,700]],[1.95,FULL],[2.5,FULL],[3.2,[380,140,1120,630]]],op:[[1.5,0],[1.8,1],[3.0,1],[3.3,0]],blur:[3.0,3.3]},
+ bow:{cam:[[3.0,[200,110,1150,650]],[3.45,[60,40,1420,800]],[4.3,FULL]],op:[[3.0,0],[3.3,1],[4.2,1],[4.5,0]],blur:[4.2,4.5]},
+ top:{cam:[[4.2,[300,150,1000,560]],[4.65,FULL],[5.3,FULL],[5.9,[820,180,700,400]]],op:[[4.2,0],[4.5,1],[5.7,1],[6.0,0]],blur:[5.7,6.0]},
+ jacuzzi:{cam:[[5.7,[200,250,900,510]],[6.15,FULL],[7.1,[80,60,1380,780]]],op:[[5.7,0],[6.0,1],[7.0,1],[7.3,0]],blur:[7.0,7.3]},
+ stern:{cam:[[7.0,[500,200,900,510]],[7.45,FULL],[8.4,[100,40,1360,770]]],op:[[7.0,0],[7.3,1],[8.3,1],[8.6,0]],blur:[8.3,8.6]},
+ salon:{cam:[[8.3,[480,250,700,400]],[8.75,FULL],[9.7,[120,60,1300,730]]],op:[[8.3,0],[8.6,1],[9.6,1],[9.9,0]],blur:[9.6,9.9]},
+ suite:{cam:[[9.6,[600,250,700,400]],[10.05,FULL],[11.0,[160,80,1280,720]]],op:[[9.6,0],[9.9,1],[10.9,1],[11.2,0]],blur:[10.9,11.2]},
+ night:{cam:[[10.9,[400,150,1150,650]],[11.5,FULL],[12.4,[60,30,1420,800]]],op:[[10.9,0],[11.2,1],[99,1]]},
+};
+const U_END=12.4;
+const UI={uHero:[0,.75],c_profile:[1.95,3.0],c_bow:[3.4,4.2],c_top:[4.65,5.7],c_jacuzzi:[6.15,7.0],c_stern:[7.45,8.3],c_salon:[8.75,9.6],c_suite:[10.05,10.9],uEnd:[11.5,99]};
+const CHAPS=[['The bay',0],['Silhouette',2.4],['Under way',3.8],['Decks',5.1],['Sundeck',6.6],['Beach club',7.9],['Salon',9.2],['Suite',10.5],['Viewing',U_END]];
+
+/* ============ mobile (portrait) cameras ============ */
+let W=innerWidth,H=innerHeight,SU=innerHeight,lastW=innerWidth;
+const TOUCH=matchMedia('(hover:none)').matches;
+const PORT=()=>W<H;
+const PADI=()=>({t:60,b:H*.34,l:0,r:0});
+const SLI=(cx,w=640)=>[clamp(cx-w/2,0,1536-w),0,w,864];
+const PAD0=()=>({t:0,b:0,l:0,r:0});
+const LAYERS_M={
+ hero:{cam:[[0,[YC[0]-345,0,690,864],'fit',PAD0],[.3,[YC[0]-345,0,690,864],'fit',PAD0],[1.45,[YC[0]-250,YC[1]-260,500,560],'fit',PAD0],[1.85,[YC[0]-170,YC[1]-180,340,380],'fit',PAD0]]},
+ profile:{cam:[[1.5,[400,250,700,500],'fit',PADI],[1.95,()=>SLI(420,720),'fit',PADI],[3.0,()=>SLI(1150,720),'fit',PADI],[3.2,[1050,300,500,400],'fit',PADI]]},
+ bow:{cam:[[3.0,[500,250,600,500],'fit',PADI],[3.45,()=>SLI(560),'fit',PADI],[4.3,()=>SLI(820),'fit',PADI]]},
+ top:{cam:[[4.2,[400,200,700,500],'fit',PADI],[4.65,()=>SLI(320,720),'fit',PADI],[5.7,()=>SLI(1200,720),'fit',PADI],[5.9,[1050,250,450,360],'fit',PADI]]},
+ jacuzzi:{cam:[[5.7,[300,250,600,500],'fit',PADI],[6.15,()=>SLI(420),'fit',PADI],[7.1,()=>SLI(1150),'fit',PADI]]},
+ stern:{cam:[[7.0,[600,250,600,500],'fit',PADI],[7.45,()=>SLI(400),'fit',PADI],[8.4,()=>SLI(1050),'fit',PADI]]},
+ salon:{cam:[[8.3,[600,250,500,450],'fit',PADI],[8.75,()=>SLI(450),'fit',PADI],[9.7,()=>SLI(1150),'fit',PADI]]},
+ suite:{cam:[[9.6,[600,250,500,450],'fit',PADI],[10.05,()=>SLI(450),'fit',PADI],[11.0,()=>SLI(1050),'fit',PADI]]},
+ night:{cam:[[10.9,[900,250,600,450]],[11.5,()=>SLI(1100,780)],[12.4,()=>SLI(1000,900)]]},
+};
+
+/* ============ camera math ============ */
+function resolve(r){return typeof r==='function'?r():r}
+function camOf(key){const r=resolve(key[1]),mode=key[2]||'cover',pd=key[3]?key[3]():null;
+ const l=pd?.l||0,rt=pd?.r||0,t=pd?.t||0,b=pd?.b||0,Wa=W-l-rt,Ha=H-t-b;
+ let k=mode==='cover'?Math.max(Wa/r[2],Ha/r[3]):Math.min(Wa/r[2],Ha/r[3]);
+ if(!pd)k=Math.max(k,Math.max(W/1536,H/864));
+ let cx=r[0]+r[2]/2,cy=r[1]+r[3]/2;
+ if(!pd){const hw=W/(2*k),hh=H/(2*k);cx=hw*2>=1536?768:clamp(cx,hw,1536-hw);cy=hh*2>=864?432:clamp(cy,hh,864-hh)}
+ return{cx,cy,k,ox:l+Wa/2-W/2,oy:t+Ha/2-H/2}}
+function camAt(keys,u){
+ if(u<=keys[0][0])return camOf(keys[0]);const last=keys[keys.length-1];if(u>=last[0])return camOf(last);
+ let i=0;while(u>keys[i+1][0])i++;const a=camOf(keys[i]),b=camOf(keys[i+1]);const t=ease((u-keys[i][0])/(keys[i+1][0]-keys[i][0]));
+ return{cx:lerp(a.cx,b.cx,t),cy:lerp(a.cy,b.cy,t),k:Math.exp(lerp(Math.log(a.k),Math.log(b.k),t)),ox:lerp(a.ox,b.ox,t),oy:lerp(a.oy,b.oy,t)}}
+function opAt(keys,u){if(u<=keys[0][0])return keys[0][1];if(u>=keys[keys.length-1][0])return keys[keys.length-1][1];
+ let i=0;while(u>keys[i+1][0])i++;return lerp(keys[i][1],keys[i+1][1],(u-keys[i][0])/(keys[i+1][0]-keys[i][0]))}
+function rangeOp(u,[a,b],f=.2){if(u<a||u>b)return 0;return Math.min(1,a<=0?1:(u-a)/f,(b-u)/f)}
+function clampCam(c){ // never show beyond image edges (desktop)
+ return c}
+
+/* ============ build captions & callouts ============ */
+SCENES.forEach(s=>{
+ $('#c_'+s.id).innerHTML=`<div class="n"><span class="over">${s.n} / 07</span><i></i><span class="over">${s.t}</span></div><h2>${s.h}</h2><p>${s.p}</p><div class="spec">${s.spec.map(([b,t])=>`<div><b>${b}</b><span>${t}</span></div>`).join('')}</div>`;
+ const L=$('#L_'+s.id);
+ s.co.forEach(([x,y,b,t,side])=>{const d=document.createElement('div');d.className='co '+side;d.style.left=x+'px';d.style.top=y+'px';
+  d.innerHTML=`<div class="in"><i class="dot"></i><i class="ln"></i><div class="tx"><b>${b}</b><span>${t}</span></div></div>`;d.querySelector('.dot').addEventListener('click',()=>{if(W<=900)showMtip(b,t)});L.appendChild(d)});
+ if(s.dim){const[x,y,w,t]=s.dim;const d=document.createElement('div');d.className='dim';d.style.cssText=`left:${x}px;top:${y}px;width:${w}px`;d.innerHTML=`<div class="t">${t}</div>`;L.appendChild(d)}
+});
+$('#rail').innerHTML=CHAPS.map(([n,u])=>`<button data-u="${u}"><span>${n}</span><i></i></button>`).join('');
+$('#rail').querySelectorAll('button').forEach(b=>b.onclick=()=>goTo(+b.dataset.u));
+
+let mtT,mtU=0;function showMtip(b,t){const m=$('#mtip');m.innerHTML=`<b>${b}</b>${t}`;m.classList.add('on');mtU=U;clearTimeout(mtT);mtT=setTimeout(()=>m.classList.remove('on'),4500)}
+/* ============ videos ============ */
+const VID={hero:'video/hero.mp4',profile:'video/profile.mp4',bow:'video/bow.mp4',night:'video/night.mp4'};
+const VEL={};const SCRUB={bow:[3.25,4.4]};
+function b64blob(b){const bin=atob(b),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return URL.createObjectURL(new Blob([u],{type:'video/mp4'}))}
+function initVideos(){return Promise.all(Object.keys(VID).map(k=>new Promise(res=>{const v=$('#V_'+k);VEL[k]=v;v.muted=true;v.setAttribute('muted','');
+ let done=false;const fin=()=>{if(!done){done=true;res()}};v.addEventListener('loadeddata',fin,{once:true});setTimeout(fin,6000);
+ v.src=VID[k];v.load();
+ if(SCRUB[k]){const p=v.play();if(p&&p.then)p.then(()=>v.pause()).catch(()=>{})}})))}
+function driveVideos(){
+ for(const k in VEL){const v=VEL[k],vis=+LEL[k].style.opacity>0.001;
+  if(SCRUB[k]){if(!vis||!v.duration)continue;const[a,b]=SCRUB[k];const tt=clamp((U-a)/(b-a),0,1)*(v.duration-.05);
+   if(!v.seeking&&Math.abs(v.currentTime-tt)>1/40)v.currentTime=tt}
+  else{if(vis&&v.paused){v.playbackRate=1;const p=v.play();if(p&&p.catch)p.catch(()=>{})}else if(!vis&&!v.paused)v.pause()}}
+}
+/* ============ scroll engine ============ */
+const track=$('#track');
+function setTrack(){track.style.height=(U_END*SU+innerHeight)+'px'}
+let U=0,TU=0;
+addEventListener('scroll',()=>{TU=scrollY/SU},{passive:true});
+addEventListener('resize',()=>{W=innerWidth;H=innerHeight;if(!TOUCH||Math.abs(innerWidth-lastW)>40){const u=TU;lastW=innerWidth;SU=innerHeight;setTrack();scrollTo(0,u*SU);TU=u}});
+let goAnim=null;
+function goTo(u){const from=scrollY,to=u*SU,d=Math.abs(to-from),ms=clamp(d/SU*300,700,3200),t0=performance.now();cancelAnimationFrame(goAnim);
+ const step=n=>{const t=Math.min(1,(n-t0)/ms);scrollTo(0,from+(to-from)*ease(t));if(t<1)goAnim=requestAnimationFrame(step)};goAnim=requestAnimationFrame(step)}
+['wheel','touchstart','keydown'].forEach(e=>addEventListener(e,()=>cancelAnimationFrame(goAnim),{passive:true}));
+const LEL={};Object.keys(LAYERS).forEach(k=>LEL[k]=$('#L_'+k));
+const BEL={};Object.keys(LAYERS).forEach(k=>BEL[k]=$('#B_'+k));
+const UIEL={};Object.keys(UI).forEach(k=>UIEL[k]=$('#'+k));
+function frame(now){
+ const t=now/1000;
+ U+=(TU-U)*(TOUCH?.15:.075);if(Math.abs(TU-U)<.0003)U=TU;
+ const MB=PORT();
+ for(const k in LAYERS){const L=LAYERS[k],el=LEL[k];const op=opAt(L.op,U);
+  if(op<=.001){if(el.style.opacity!=='0'){el.style.opacity=0}if(BEL[k])BEL[k].style.opacity=0;continue}
+  const keys=MB&&LAYERS_M[k]?LAYERS_M[k].cam:L.cam;const c=camAt(keys,U);
+  // gentle floating sway on yacht shots
+  const sway=0;
+  el.style.transform=`translate3d(${W/2+c.ox-c.cx*c.k}px,${H/2+c.oy-c.cy*c.k+sway}px,0) scale(${c.k})`;
+  el.style.opacity=op;el.style.setProperty('--inv',(1/c.k).toFixed(4));
+  let bl=0;if(L.blur&&U>L.blur[0]&&U<L.blur[1])bl=(U-L.blur[0])/(L.blur[1]-L.blur[0])*10;
+  el.style.filter=bl>.2&&!TOUCH?`blur(${bl.toFixed(1)}px)`:'none';
+  if(BEL[k])BEL[k].style.opacity=MB?op:0;
+ }
+ // callouts staggered within caption range
+ SCENES.forEach(s=>{const[a,b]=UI['c_'+s.id];const L=LEL[s.id];const cos=L.querySelectorAll('.co');
+  cos.forEach((co,i)=>{const on=U>a+.08+i*.12&&U<b-.05;co.classList.toggle('on',on)});
+  const dm=L.querySelector('.dim');if(dm)dm.classList.toggle('on',U>a+.05&&U<b-.05)});
+ for(const k in UI){const o=rangeOp(U,UI[k]);const el=UIEL[k];el.style.opacity=o;el.classList.toggle('live',o>.5);
+  const base=k==='uHero'?'translateY(-50%) ':k==='uEnd'?'translate(-50%,-50%) ':'';el.style.transform=base+`translateY(${(1-o)*26}px)`}
+ if(Math.abs(U-mtU)>.25)$('#mtip').classList.remove('on');
+ driveVideos();
+ $('#endShade').style.opacity=clamp((U-11.3)/.3,0,1);
+ $('#hint').style.opacity=clamp(1-U*4,0,1);
+ let ci=0;CHAPS.forEach(([n,u],i)=>{if(U>=u-.6)ci=i});
+ $('#chapN').textContent=String(ci+1).padStart(2,'0');$('#chapT').textContent=CHAPS[ci][0];$('#chapBar').style.setProperty('--p',clamp(U/U_END,0,1));
+ $('#rail').querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on',i===ci));
+ requestAnimationFrame(frame);
+}
+
+/* ============ modal ============ */
+function openModal(kind){$('#mTitle').textContent=kind==='charter'?'Charter AURELIA':'Private viewing';$('#mText').textContent='Our broker will contact you within the hour to arrange a date and marina.';$('#mForm').style.display='';$('#mForm select').value=kind==='charter'?'Charter':'Purchase';$('#modal').classList.add('on')}
+$('#hdrCta').onclick=()=>openModal();$('#endCta').onclick=()=>openModal();$('#charterBtn').onclick=()=>openModal('charter');
+$('#mClose').onclick=()=>$('#modal').classList.remove('on');$('#modal').onclick=e=>{if(e.target.id==='modal')$('#modal').classList.remove('on')};
+$('#mForm').onsubmit=e=>{e.preventDefault();$('#mTitle').textContent='Thank you';$('#mText').textContent='This is a demo prototype, so the request isn’t sent anywhere. On a live site it would go to the broker’s CRM.';$('#mForm').style.display='none'};
+addEventListener('keydown',e=>{if(e.key==='Escape')$('#modal').classList.remove('on')});
+
+/* ============ boot ============ */
+addEventListener('touchstart',()=>{for(const k in VEL){const v=VEL[k];if(v.paused&&SCRUB[k]){const p=v.play();if(p&&p.then)p.then(()=>v.pause()).catch(()=>{})}}},{once:true,passive:true});
+setTrack();
+(async()=>{
+ const imgs=[...document.querySelectorAll('.layer img')];let n=0;const tot=imgs.length+4;const tick=()=>{n++;$('#lp').style.transform=`scaleX(${n/tot})`};
+ await Promise.all([...imgs.map(im=>(im.decode?im.decode():Promise.resolve()).catch(()=>{}).then(tick)),initVideos().then(()=>{n+=3;tick()})]);
+ TU=U=scrollY/SU;requestAnimationFrame(frame);
+ const L=$('#loader');L.style.opacity=0;setTimeout(()=>L.remove(),1000);
+})();
+</script>
+</body>
+</html>
